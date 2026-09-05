@@ -2,13 +2,35 @@
   const prev = document.querySelector("[data-prev]");
   const next = document.querySelector("[data-next]");
 
+  function go(el) {
+    if (!el) return;
+    const href = el.getAttribute("href");
+    if (href) window.location.href = href;
+  }
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft" && prev) window.location.href = prev.getAttribute("href");
-    if (e.key === "ArrowRight" && next) window.location.href = next.getAttribute("href");
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.key === "ArrowLeft") go(prev);
+    if (e.key === "ArrowRight") go(next);
   });
 
+  let startX = null;
+  document.addEventListener("touchstart", (e) => {
+    if (!e.changedTouches || !e.changedTouches[0]) return;
+    startX = e.changedTouches[0].clientX;
+  }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    if (startX == null || !e.changedTouches || !e.changedTouches[0]) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    startX = null;
+    if (Math.abs(dx) < 70) return;
+    if (dx > 0) go(prev);
+    else go(next);
+  }, { passive: true });
+
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const layer = document.querySelector(".petals");
-  if (!layer) return;
+  if (!layer || reduce) return;
   for (let i = 0; i < 14; i++) {
     const p = document.createElement("span");
     p.className = "petal";
